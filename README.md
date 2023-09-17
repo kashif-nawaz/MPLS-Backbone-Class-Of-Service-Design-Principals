@@ -106,7 +106,7 @@ Classifier: dscp-default, Code point type: dscp, Index: 8
   001101             best-effort                         low         
   001110             assured-forwarding                  high        
   ```
-On ingress PE router traffic entering from CE router is classified using DSCP values and thereafter traffic will be encapsulated in MPLS header towards next LSR. As  LSRs will not have visibility of inner packet header (source host and destination) and we need to apply exp based (supported for MPLS lable header)  rewrite-rule. Subsequently each LSR will classify ingress traffic using exp bits and  will rewrite exp bits  on egress interface. 
+On ingress PE router traffic entering from CE router is classified using DSCP values and thereafter traffic will be encapsulated in MPLS header towards next LSR. As  LSRs will not have visibility of inner packet header (source host and destination) and we need to apply exp based (supported for MPLS lable header)  rewrite-rule, subsequently each LSR will classify ingress traffic using exp bits and  will rewrite exp bits  on egress interface. 
 
 ```
 set class-of-service rewrite-rules exp exp-test import default
@@ -666,7 +666,11 @@ root@100.100.253.1's password:
 Permission denied, please try again.
 root@100.100.253.1's password:
 
-root@CE1> show interfaces queue et-0/0/1 | match "Queue|Bytes"    
+root@CE1> show lldp neighbors   
+Local Interface    Parent Interface    Chassis Id          Port info          System Name
+et-0/0/1           -                   16:26:2d:17:05:d5   et-0/0/1           PE2   
+
+root@CE1> show interfaces queue et-0/0/1 | match "Queue|Bytes" 
 Egress queues: 8 supported, 4 in use
 Queue: 0, Forwarding classes: best-effort
   Queued:
@@ -682,44 +686,24 @@ Queue: 1, Forwarding classes: expedited-forwarding
     RED-dropped bytes    :                     0                     0 bps
 Queue: 2, Forwarding classes: assured-forwarding
   Queued:
-    Bytes                :                  3293                  4368 bps
-    Bytes                :                  3293                  4368 bps
+    Bytes                :                  3387                     0 bps
+    Bytes                :                  3387                     0 bps
     Tail-dropped bytes   :                     0                     0 bps
     RED-dropped bytes    :                     0                     0 bps
 Queue: 3, Forwarding classes: network-control
   Queued:
-    Bytes                :                 17077                   128 bps
-    Bytes                :                 17077                   128 bps
+    Bytes                :                138415                   440 bps
+    Bytes                :                138415                   440 bps
     Tail-dropped bytes   :                     0                     0 bps
     RED-dropped bytes    :                     0                     0 bps
 
 
-root@PE2> show interfaces queue et-0/0/1 | match "Queue|Bytes" 
-Egress queues: 8 supported, 4 in use
-Queue: 0, Forwarding classes: best-effort
-  Queued:
-    Bytes                :                  3151                     0 bps
-    Bytes                :                  3151                     0 bps
-    Tail-dropped bytes   :                     0                     0 bps
-    RED-dropped bytes    :                     0                     0 bps
-Queue: 1, Forwarding classes: expedited-forwarding
-  Queued:
-    Bytes                :                     0                     0 bps
-    Bytes                :                     0                     0 bps
-    Tail-dropped bytes   :                     0                     0 bps
-    RED-dropped bytes    :                     0                     0 bps
-Queue: 2, Forwarding classes: assured-forwarding
-  Queued:
-    Bytes                :                     0                     0 bps
-    Bytes                :                     0                     0 bps
-    Tail-dropped bytes   :                     0                     0 bps
-    RED-dropped bytes    :                     0                     0 bps
-Queue: 3, Forwarding classes: network-control
-  Queued:
-    Bytes                :                 24552                     0 bps
-    Bytes                :                 24552                     0 bps
-    Tail-dropped bytes   :                     0                     0 bps
-    RED-dropped bytes    :                     0                     0 bps
+
+root@PE2> show lldp neighbors   
+Local Interface    Parent Interface    Chassis Id          Port info          System Name
+et-0/0/6           -                   3c:53:8e:56:05:d5   et-0/0/6           P1                  
+et-0/0/1           -                   d8:57:57:12:05:d5   et-0/0/1           CE1     
+
 
 root@PE2> show interfaces queue et-0/0/6 | match "Queue|Bytes" 
 Egress queues: 8 supported, 4 in use
@@ -749,7 +733,11 @@ Queue: 3, Forwarding classes: network-control
     RED-dropped bytes    :                     0                     0 bps
 
 
- 
+ root@P1> show lldp neighbors   
+Local Interface    Parent Interface    Chassis Id          Port info          System Name
+et-0/0/6           -                   16:26:2d:17:05:d5   et-0/0/6           PE2                 
+et-0/0/2           -                   a0:d0:71:05:05:d5   et-0/0/2           P3                  
+
 
 root@P1> show interfaces queue et-0/0/2 | match "Queue|Bytes" 
 Egress queues: 8 supported, 4 in use
@@ -779,6 +767,11 @@ Queue: 3, Forwarding classes: network-control
     RED-dropped bytes    :                     0                     0 bps
 
 
+root@P3> show lldp neighbors   
+Local Interface    Parent Interface    Chassis Id          Port info          System Name
+et-0/0/6           -                   06:ab:4c:65:05:d5   et-0/0/6           P5                  
+et-0/0/2           -                   3c:53:8e:56:05:d5   et-0/0/2           P1   
+
 root@P3> show interfaces queue et-0/0/6 | match "Queue|Bytes" 
 Egress queues: 8 supported, 4 in use
 Queue: 0, Forwarding classes: best-effort
@@ -806,6 +799,10 @@ Queue: 3, Forwarding classes: network-control
     Tail-dropped bytes   :                     0                     0 bps
     RED-dropped bytes    :                     0                     0 bps
 
+root@P5> show lldp neighbors   
+Local Interface    Parent Interface    Chassis Id          Port info          System Name
+et-0/0/6           -                   a0:d0:71:05:05:d5   et-0/0/6           P3                  
+et-0/0/2           -                   a6:97:f2:2e:05:d5   et-0/0/2           PE3       
 
 
 root@P5> show interfaces queue et-0/0/2 | match "Queue|Bytes"   
@@ -835,7 +832,12 @@ Queue: 3, Forwarding classes: network-control
     Tail-dropped bytes   :                     0                     0 bps
     RED-dropped bytes    :                     0                     0 bps
 
+root@PE3> show lldp neighbors   
+Local Interface    Parent Interface    Chassis Id          Port info          System Name
+et-0/0/2           -                   06:ab:4c:65:05:d5   et-0/0/2           P5                  
+et-0/0/0           -                   62:d1:e1:5e:05:d5   et-0/0/0           CE2                 
 
+    
 
 root@PE3> show interfaces queue et-0/0/0 | match "Queue|Bytes"    
 Egress queues: 8 supported, 4 in use
@@ -864,6 +866,9 @@ Queue: 3, Forwarding classes: network-control
     Tail-dropped bytes   :                     0                     0 bps
     RED-dropped bytes    :                     0                     0 bps
 
+root@CE2> show lldp neighbors   
+Local Interface    Parent Interface    Chassis Id          Port info          System Name
+et-0/0/0           -                   a6:97:f2:2e:05:d5   et-0/0/0           PE3 
 
 root@CE2> show interfaces queue et-0/0/2 | match "Queue|Bytes"    
 Egress queues: 8 supported, 4 in use
