@@ -106,7 +106,7 @@ Classifier: dscp-default, Code point type: dscp, Index: 8
   001101             best-effort                         low         
   001110             assured-forwarding                  high        
   ```
-On ingress PE router traffic entering from CE router is classified using DSCP values and thereafter traffic will be encapsulated in MPLS header towards egress PE and MPLS LSR router will not have visibility of inner packet header (source host and destination) and we need to apply rewrite rule using MPLS header EXP bits, subsequently each LSR will classify ingress traffic using exp and rewrite exp values on egress interface. 
+On ingress PE router traffic entering from CE router is classified using DSCP values and thereafter traffic will be encapsulated in MPLS header towards next LSR. As  LSRs will not have visibility of inner packet header (source host and destination) and we need to apply exp based (supported for MPLS lable header)  rewrite-rule. Subsequently each LSR will classify ingress traffic using exp bits and  will rewrite exp bits  on egress interface. 
 
 ```
 set class-of-service rewrite-rules exp exp-test import default
