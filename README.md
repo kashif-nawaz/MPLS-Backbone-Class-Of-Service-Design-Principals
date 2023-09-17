@@ -1,4 +1,4 @@
-# MPLS-Backbone-Class-Of-Service-Design-Principals
+# MPLS-Backbone-Class-Of-Service-Design-Principles
 Designing and deploying Class of Service in MPLS backbone network is a complex topic and explaining all the components would require lengthy document. However in this document I will try to explain high level design principals with implementation details for a simple use case. I will not discuss any of implementation details related to MPLS LSP but focus would be on Class of Service basic design principals. 
 ## Toplogy
 ![toplogy](./images/toplogy.png)
