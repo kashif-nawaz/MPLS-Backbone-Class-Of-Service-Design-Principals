@@ -289,8 +289,8 @@ default via 192.168.24.1 dev eth0
 
 root@CE2> show arp | match 100.100.253 
 50:00:00:0e:00:01 100.100.253.1   100.100.253.1             et-0/0/2.0              none
-
-"clear interfaces statistics all" command   will be executed on all router so that we can collect stats from clean state. 
+```
+clear interfaces statistics all command   will be executed on all router so that we can collect stats from clean state. 
 
 ```
 root@CE1> show lldp neighbors   
