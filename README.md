@@ -24,7 +24,6 @@ set firewall family inet filter FF-MF term ssh then loss-priority low
 set firewall family inet filter FF-MF term ssh then forwarding-class assured-forwarding
 set firewall family inet filter FF-MF term default then reject
 
-set interfaces et-0/0/2 apply-groups-except IFD
 set interfaces et-0/0/2 unit 0 family inet filter input FF-MF
 set interfaces et-0/0/2 unit 0 family inet address 100.100.254.254/24
 ```
