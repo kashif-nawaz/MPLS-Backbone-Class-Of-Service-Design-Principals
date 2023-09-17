@@ -2,10 +2,13 @@
 Designing and deploying Class of Service in MPLS backbone network is a complex topic and explaining all the components would require lengthy document. However in this document I will try to explain high level design principals with implementation details for a simple use case. I will not discuss any of implementation details related to MPLS LSP but focus would be on Class of Service basic design principals. 
 ## Toplogy
 ![toplogy](./images/toplogy.png)
+## Platform Used
+Junos  23.2R1.15-EVO on vPTX (ptx10001-36mr)
 ## Use Case
 ICMP traffic between Host1 and Host2 should be give best-effort treatment while ssh traffic should be given assured-forwarding treatment.  I will explain config with respect Host1 to Host2 flows and reverse direction config will follow same scheme.
 ## Design Considerations
 Traffic entering into Customer Edge (CE1) router will be classified by matching source address , protocols and destination port (for ssh traffic) and will be assigned to appropriate forwarding class. This type of traffic classification is "Behavioral Aggregated" classification. Egress traffic from CE1 towards Provider Edge (PE) 1&2 routers will be marked with appropriate DSCP code points. Once traffic will enter PE routers it will be classified by matching DSCP bits and traffic will be assigned to appropriate forwarding class. This type of class fiction is called multi field classification. Source PEs traffic will encapsulate packets in MPLS header and will forward it towards destination PEs. As DSCP based multi filed classified packets will be not identified by MPLS label switch routers (LSR) and to solve this challenge we need to apply EXP based rewrite rule on source PEs egress interface and on each LSR' egress interfaces. Subsequently on ingress interface of each LSR traffic will be classified using MPLS header EXP bits.  Once traffic will reach egress PEs, MPLS label will be removed and IP packet will be forwarded to egress CE. On egress PE interfaces connected with egress CE we will apply DSCP based rewrite rules so that on egress CE ingress interface DSCP based multi filed classification could happen and eventually on egress CE traffic will exit to destination host via appropriate queue of egress interface. 
+
 ## Implmentation Details
 ### CE1 Config
 Following firewall filter is applied on host facing interface and it is putting ICMP traffic into best-effort queue and also setting loss-priority to low. Next term of the filter is putting ssh traffic into assured-forwarding queue and finally filter is applied on host facing interface. 
