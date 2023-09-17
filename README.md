@@ -40,7 +40,7 @@ Physical interface: et-0/0/0, Index: 1024
 Maximum usable queues: 8, Queues in use: 4
 Exclude aggregate overhead bytes: disabled
 Logical interface aggregate statistics: disabled
-  Scheduler map: default, Index: 0
+  Scheduler map: test-mp, Index: 0
   Congestion-notification: Disabled
 
   Logical interface: et-0/0/0.100, Index: 1003
@@ -53,7 +53,7 @@ Physical interface: et-0/0/1, Index: 1025
 Maximum usable queues: 8, Queues in use: 4
 Exclude aggregate overhead bytes: disabled
 Logical interface aggregate statistics: disabled
-  Scheduler map: default, Index: 0
+  Scheduler map: test-mp, Index: 0
   Congestion-notification: Disabled
 
   Logical interface: et-0/0/1.100, Index: 1005
@@ -106,6 +106,7 @@ Classifier: dscp-default, Code point type: dscp, Index: 8
   001101             best-effort                         low         
   001110             assured-forwarding                  high        
   ```
+### Ingress PE Config
 On ingress PE router traffic entering from CE router is classified using DSCP values and thereafter traffic will be encapsulated in MPLS header towards next LSR. As  LSRs will not have visibility of inner packet header (source host and destination) and we need to apply exp based (supported for MPLS lable header)  rewrite-rule, subsequently each LSR will classify ingress traffic using exp bits and  will rewrite exp bits  on egress interface. 
 
 ```
@@ -141,6 +142,7 @@ Rewrite rule: exp-test, Code point type: exp, Index: 7
   network-control                     medium-high         101            
   network-control                     high                111  
   ```
+### LSR Config
 Once traffic will exit the ingress PE router with appropriate marking set by exp-test rewrite rule then on next LSR we need put ingress classification using exp values set by ingress PE router egress interface.  Let's review LSR router config (I will explain config for P1 LSR in our topology) and remaining of LSR will have same conifg. 
 
 Let's view LSR ingress classifier.
@@ -172,7 +174,7 @@ Physical interface: et-0/0/6, Index: 1020
 Maximum usable queues: 8, Queues in use: 4
 Exclude aggregate overhead bytes: disabled
 Logical interface aggregate statistics: disabled
-  Scheduler map: default, Index: 0
+  Scheduler map: test-mp, Index: 0
   Congestion-notification: Disabled
 
   Logical interface: et-0/0/6.0, Index: 1006
@@ -209,7 +211,7 @@ Physical interface: et-0/0/2, Index: 1026
 Maximum usable queues: 8, Queues in use: 4
 Exclude aggregate overhead bytes: disabled
 Logical interface aggregate statistics: disabled
-  Scheduler map: default, Index: 0
+  Scheduler map: test-mp, Index: 0
   Congestion-notification: Disabled
 
   Logical interface: et-0/0/2.0, Index: 1011
@@ -226,7 +228,7 @@ set class-of-service classifiers exp exp-test forwarding-class best-effort loss-
 set class-of-service interfaces et-0/0/2 unit 0 classifiers exp exp-test
 set class-of-service interfaces et-0/0/2 unit 0 rewrite-rules exp exp-test
 ```
-
+### Egress PE Config 
 On egress PE (i.e PE3) MPLS label will be removed and IP packet will be forwarded to CE2 at that stage need to apply DSCP based rewrite rules.
 
 ```
@@ -238,6 +240,7 @@ Object                  Name                   Type                    Index
 Classifier              dscp-default           dscp                        0
 Rewrite                 dscp-default           dscp                        0
 ```
+### Egress CE Config
 On reaching egress CE (i.e CE2) traffic needs to be classified using marking done by egress LSR i.e P5.
 ```
 set class-of-service interfaces et-0/0/0 unit 100 classifiers dscp dscp-default
@@ -247,7 +250,7 @@ Physical interface: et-0/0/0, Index: 1024
 Maximum usable queues: 8, Queues in use: 4
 Exclude aggregate overhead bytes: disabled
 Logical interface aggregate statistics: disabled
-  Scheduler map: default, Index: 0
+  Scheduler map: test-mp, Index: 0
   Congestion-notification: Disabled
 
   Logical interface: et-0/0/0.100, Index: 1004
@@ -255,7 +258,35 @@ Object                  Name                   Type                    Index
 Classifier              dscp-default           dscp                        0
 Rewrite                 dscp-default           dscp                        0
 ```
+### Scheduler Map
+By default, 95% resources are mapped for best-effort queue and 5% for network-control queue, hence we are using assured-forwarding queue as well, so we need to allocate resources for this queue as well. I have configured same scheduler map on PEs, Ps and CEs routers. Only difference on PEs & CEs is that hence I am using vlan-tagging for CE-PE connectivity, so I have to configure per-unit-schduler on CE-PE interfaces. 
 
+```
+set class-of-service scheduler-maps test-mp forwarding-class assured-forwarding scheduler test-af
+set class-of-service scheduler-maps test-mp forwarding-class best-effort scheduler test-be
+set class-of-service scheduler-maps test-mp forwarding-class expedited-forwarding scheduler test-ef
+set class-of-service scheduler-maps test-mp forwarding-class network-control scheduler test-nc
+set class-of-service schedulers test-af transmit-rate percent 10
+set class-of-service schedulers test-af buffer-size percent 10
+set class-of-service schedulers test-af priority high
+set class-of-service schedulers test-be transmit-rate percent 70
+set class-of-service schedulers test-be buffer-size percent 70
+set class-of-service schedulers test-ef transmit-rate percent 10
+set class-of-service schedulers test-ef buffer-size percent 10
+set class-of-service schedulers test-ef priority high
+set class-of-service schedulers test-nc buffer-size percent 5
+set class-of-service schedulers test-nc priority strict-high
+set class-of-service interfaces <IFD-Name> scheduler-map test-mp
+```
+#### CE-PE Interfaces Additional Config 
+```
+set interfaces <IFD-Name> per-unit-scheduler
+set interfaces <IFD-Name> flexible-vlan-tagging
+set interfaces <IFD-Name> encapsulation flexible-ethernet-services
+set interfaces <IFD-Name> unit <ID> vlan-id <ID>
+set interfaces <IFD-Name> unit <ID> family inet address <IPV4 Address>
+```
+## Verification
 Let's verify traffic flow from Host1 to Host2 and associated class-of-service operation. 
 traffic path is Host1(e1)-->CE1(et-0/0/2)-->CE1(et-0/0/1)-->PE2(et-0/0/1)-->PE2(et-0/0/6)-->P1(et-0/0/6)-->P1(et-0/0/2)-->P3(et-0/0/2)--P3(et-0/0/6)-->P5(et-0/0/6)---P5(et-0/0/2)-->PE3(et-0/0/2)-->PE3(et-0/0/0)--CE2(et-0/0/0)-->CE2(et-0/0/2)-->Host2
 
