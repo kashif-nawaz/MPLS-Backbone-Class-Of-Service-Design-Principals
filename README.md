@@ -7,7 +7,7 @@ Junos  23.2R1.15-EVO on vPTX (ptx10001-36mr)
 ## Use Case
 ICMP traffic between Host1 and Host2 should be given best-effort treatment while ssh traffic should be given assured-forwarding treatment.  I will explain config with respect Host1 to Host2 flows and reverse direction config will follow same scheme.
 ## Design Considerations
-Traffic entering into Customer Edge (CE1) router will be classified by matching source address , protocols and destination port (for ssh traffic) and subsequently will be assigned to appropriate forwarding class. This type of classifier is called "Multifield Classifier". Egress traffic from CE1 towards Provider Edge (PE) 1&2 routers will be marked with appropriate DSCP code points using rewrite-rule. Traffic entering ingress PE routers will be classified by matching DSCP bits and will be assigned to appropriate forwarding class. This type of classifier is called "Behavior Aggregate Classifier". Ingress PEs will encapsulate packets in MPLS header and will forward it towards next label switch router (LSR). As DSCP marked packets will be not identified by LSR and to solve this challenge we need to apply EXP based rewrite rule on ingress PEs egress interface.  Subsequently, on ingress interface of next LSR traffic will be classified using MPLS header EXP bits. On each LSR, EXP rewrite-rule will be applied so that traffic can be classified on ingress interface of next LSR.  Once traffic will reach egress PEs, MPLS label will be removed and IP packet will be forwarded towards egress CE. While traffic will be exiting egress PE, DSCP based rewrite rules will be applied so that egress CE ingress interface can classify packets using Behavior Aggregate Classifier. Eventually on egress CE traffic will exit to destination host via appropriate queue of egress interface. 
+Traffic entering into Customer Edge (CE1) router will be classified by matching source address , protocols and destination port (for ssh traffic) and subsequently will be assigned to appropriate forwarding class. This type of classifier is called "Multifield Classifier". Egress traffic from CE1 towards Provider Edge (PE) 1&2 routers will be marked with appropriate DSCP code points using rewrite-rule. Traffic entering ingress PE routers will be classified by matching DSCP bits and will be assigned to appropriate forwarding class. This type of classifier is called "Behavior Aggregate Classifier". Ingress PEs will encapsulate packets in MPLS header and will forward it towards next label switch router (LSR). As DSCP marked packets will be not identified by LSR and to solve this challenge we need to apply EXP based rewrite rule on ingress PEs egress interface.  Subsequently, on ingress interface of next LSR traffic will be classified using MPLS header EXP bits. On each LSR, EXP rewrite-rule will be applied so that traffic can be classified on ingress interface of next LSR.  Once traffic will reach egress PEs, MPLS label will be removed and IP packet will be forwarded towards egress CE. While traffic will be exiting egress PE, DSCP based rewrite rules will be applied so that egress CE ingress interface can classify packets using Behavior Aggregate Classifier. Eventually on egress CE traffic will exit to destination host via appropriate queue of egress interface. By default, 95% resources are mapped for best-effort queue and 5% for network-control queue, hence we are using assured-forwarding queue as well, so we need to allocate resources for this queue as well.
 
 ## Implmentation Details
 ### CE1 Config
@@ -79,6 +79,8 @@ Rewrite rule: dscp-default, Code point type: dscp, Index: 5
 
 ```
 
+### Ingress PE Config
+On ingress PE router traffic entering from CE router is classified using DSCP values and thereafter traffic will be encapsulated in MPLS header towards next LSR. As  LSRs will not have visibility of inner packet header (source host and destination) and we need to apply exp based (supported for MPLS lable header)  rewrite-rule, subsequently each LSR will classify ingress traffic using exp bits and  will rewrite exp bits  on egress interface. 
 Once traffic from CE router will enter the PE router then we need to classify it based on DSCP values (marked earlier by CE router on egress interface). 
 
 ```
@@ -106,8 +108,6 @@ Classifier: dscp-default, Code point type: dscp, Index: 8
   001101             best-effort                         low         
   001110             assured-forwarding                  high        
   ```
-### Ingress PE Config
-On ingress PE router traffic entering from CE router is classified using DSCP values and thereafter traffic will be encapsulated in MPLS header towards next LSR. As  LSRs will not have visibility of inner packet header (source host and destination) and we need to apply exp based (supported for MPLS lable header)  rewrite-rule, subsequently each LSR will classify ingress traffic using exp bits and  will rewrite exp bits  on egress interface. 
 
 ```
 set class-of-service rewrite-rules exp exp-test import default
