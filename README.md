@@ -933,4 +933,4 @@ Above output shows that assured-forwarding queue counter has increased on whole 
 ## DSCP to EXP Code-Point Mapping
 There is no rule thumb to drive DSCP to EXP Code-point mapping but some agreement is required as what DSCP code point will be mapped to what EXP code point as it will facilitate to prepare EXP re-rewite rules and classifiers. e.g I have used following scheme for DSCP to EXP mapping. 
 
-![DSCP-to-EXP-Mapping](dscp-to-exp-mapping.png)
+![DSCP-to-EXP-Mapping](./images/dscp-to-exp-mapping.png)
