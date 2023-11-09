@@ -929,3 +929,8 @@ Queue: 3, Forwarding classes: network-control
     RED-dropped bytes    :                     0                     0 bps
 ```
 Above output shows that assured-forwarding queue counter has increased on whole path (egress interfaces) thus confirming correctness of class of service scheme and config applied. 
+
+## DSCP to EXP Code-Point Mapping
+There is no rule thumb to drive DSCP to EXP Code-point mapping but some agreement is required as what DSCP code point will be mapped to what EXP code point as it will facilitate to prepare EXP re-rewite rules and classifiers. e.g I have used following scheme for DSCP to EXP mapping. 
+
+![DSCP-to-EXP-Mapping](dscp-to-exp-mapping.png)
